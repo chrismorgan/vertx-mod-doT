@@ -32,7 +32,7 @@
 
 var fs = require('vertx/file_system'),
 	console = require('vertx/console'),
-	doT = module.exports = require("doT");
+	doT = module.exports = require("./doT");
 
 doT.process = function(options) {
 	//path, destination, global, rendermodule, templateSettings
@@ -51,7 +51,7 @@ function InstallDots(o) {
 }
 
 InstallDots.prototype.compileToFile = function(path, template, def) {
-	console.log(path);
+//	/console.log(path);
 	
 	def = def || {};
 	var modulename = path.substring(path.lastIndexOf("/")+1, path.lastIndexOf("."))
@@ -125,7 +125,7 @@ function readdata(path) {
 InstallDots.prototype.compilePath = function(path) {
 	var data = readdata(path);
 	if (data) {
-		console.log(JSON.stringify(this.__includes));
+		//console.log(JSON.stringify(this.__includes));
 		return doT.template(data,
 					this.__settings || doT.templateSettings,
 					copy(this.__includes));
@@ -154,7 +154,7 @@ InstallDots.prototype.compileAll = function() {
 		if (/\.dot(\.def|\.jst)?$/.test(name)) {
 			console.log("Compiling " + namePath + " to function");
 			this.__rendermodule[namePath.substring(0, namePath.indexOf('.'))] = this.compilePath(defFolder + namePath);
-			console.log(namePath+this.__rendermodule[namePath.substring(0, namePath.indexOf('.'))].toString());
+//			/console.log(namePath+this.__rendermodule[namePath.substring(0, namePath.indexOf('.'))].toString());
 		}
 		if (/\.jst(\.dot|\.def)?$/.test(name)) {
 			console.log("Compiling " + namePath + " to file");
