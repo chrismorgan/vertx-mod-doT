@@ -8,7 +8,6 @@ var fs = require('vertx/file_system');
 
 function testComplexTemplate() {
 
-	setup();
 	vertx.eventBus.send("template.apply", {action:'apply',payload:{name:"Jake",age:31},template:'test1'}, function(reply) {
 		vassert.assertEquals("OK", reply.status);
 	    vassert.assertEquals("<div>Hi Jake!</div><div>31</div>", reply.message);   
@@ -17,7 +16,6 @@ function testComplexTemplate() {
 }
 
 function testSimpleTemplate(){
-	setup();
 	vertx.eventBus.send("template.apply", {action:'apply',payload:{foo:'for my test'},template:'test'}, function(reply) {
 		vassert.assertEquals("OK", reply.status);
 		vassert.assertEquals("<h1>Here is a sample template for my test</h1>", reply.message);	  
@@ -26,7 +24,6 @@ function testSimpleTemplate(){
 }
 
 function testMissingTemplate(){
-	setup();
 	vertx.eventBus.send("template.apply", {action:'apply',payload:{foo:'for my test'},template:'missing'}, function(reply) {
 		vassert.assertEquals("ERROR", reply.status);
 		console.log(reply.message);
@@ -35,7 +32,6 @@ function testMissingTemplate(){
 }
 
 function testOneDef() {
-	setup();
 	vertx.eventBus.send("template.apply", {action:'apply',payload:{foo:"Jake"},template:'test2'}, function(reply) {
 		vassert.assertEquals("OK", reply.status);
 	    vassert.assertEquals("<div>Jake</div>", reply.message);	  
@@ -44,7 +40,6 @@ function testOneDef() {
 }
 
 function testBadAction() {
-	setup();
 	vertx.eventBus.send("template.apply", {action:'gerbil',payload:{foo:"Jake"},template:'test2'}, function(reply) {
 		vassert.assertEquals("ERROR", reply.status);	    	 
 	    vassert.testComplete();
@@ -52,7 +47,6 @@ function testBadAction() {
 }
 
 function testMultiDefJst() {
-	setup();
 	vertx.eventBus.send("template.apply", {action:'apply',payload:{foo:"bongo",class:"sausage"},template:'two'}, function(reply) {
 		vassert.assertEquals("OK", reply.status);
 	    vassert.assertEquals("<div class=\"sausage\"><div>bongo</div><div>hello</div><div class=\"hidden\"></div><div>world</div><div class=\"visible\"></div></div>", reply.message);	  
@@ -61,7 +55,6 @@ function testMultiDefJst() {
 }
 
 function testSimpleCompile(){
-	setup();
 	vertx.eventBus.send("template.apply", {action:'compile',payload:'<h1>Here is a sample template {{=it.foo}}</h1>',template:'compile1'}, function(reply1) {
 	  
 		vassert.assertEquals("OK", reply1.status);
@@ -77,7 +70,6 @@ function testSimpleCompile(){
 }
 
 function testDelete() {
-	setup();
 	vertx.eventBus.send("template.apply", {action:'delete',template:'test2'}, function(reply) {
 		vassert.assertEquals("OK", reply.status);
 		
@@ -91,14 +83,14 @@ function testDelete() {
 var script = this;
 
 function setup(){
-	console.log("Cleaning compilation folder ./compiledbasic/");
-	fs.deleteSync("./compiledbasic/",true);
+	console.log("Cleaning compilation folder compiledbasic/");
+	fs.deleteSync("compiledbasic/",true);
 	console.log("Cleaned");
 }
 
-container.deployVerticle("doT-vertx.js",{template_folder:'template_folder',address:'template.apply',can_compile:true,destination:'./compiledbasic/'},function(err, depID) {
-	console.log("Deployed Verticle");
-	
+container.deployVerticle("doT-vertx.js",{template_folder:'template_folder',address:'template.apply',can_compile:true,destination:'compiledbasic/'},function(err, depID) {
+	console.log("Deployed Verticle "+depID);
+	setup();
 	// Deployment is asynchronous and this this handler will be called when it's complete (or failed)
     vassert.assertNull(err);
 	// If deployed correctly then start the tests!

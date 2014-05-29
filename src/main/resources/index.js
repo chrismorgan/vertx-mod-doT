@@ -32,7 +32,7 @@
 
 var fs = require('vertx/file_system'),
 	console = require('vertx/console'),
-	doT = module.exports = require("./doT");
+	doT = module.exports = require("doT");
 
 doT.process = function(options) {
 	//path, destination, global, rendermodule, templateSettings
@@ -134,22 +134,22 @@ InstallDots.prototype.compilePath = function(path) {
 };
 
 InstallDots.prototype.compileAll = function() {
-	console.log("Compiling all doT templates..."+this.__path);	
+	console.log("Compiling all doT templates in "+this.__path);	
 	var defFolder = this.__path,
 		sources = fs.readDirSync(defFolder,'.*\.dot|.*\.jst|.*\.def$'),			
 		k, l, name, namePath;
 	for( k = 0, l = sources.length; k < l; k++) {
 		name = sources[k];		
-		namePath = name.substring(name.lastIndexOf('\\')+1);	
+		namePath = name.substring(name.lastIndexOf(java.lang.System.getProperty("file.separator"))+1);	
 		if (/\.def(\.dot|\.jst)?$/.test(namePath)) {
-			console.log("Loaded def " + namePath);
+			console.log("Loaded def " + defFolder + namePath);
 			this.__includes[namePath.substring(0, namePath.indexOf('.'))] = readdata(defFolder + namePath);
 		}
 	}
 
 	for( k = 0, l = sources.length; k < l; k++) {
 		name = sources[k];
-		namePath = name.substring(name.lastIndexOf('\\')+1);	
+		namePath = name.substring(name.lastIndexOf(java.lang.System.getProperty("file.separator"))+1);	
 		if (/\.dot(\.def|\.jst)?$/.test(name)) {
 			console.log("Compiling " + namePath + " to function");
 			this.__rendermodule[namePath.substring(0, namePath.indexOf('.'))] = this.compilePath(defFolder + namePath);

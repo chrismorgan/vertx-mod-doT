@@ -1,4 +1,4 @@
-var vertx = require('vertx'), console = require('vertx/console'), doTloader = require('index'), doT =require('dot'), fs = require('vertx/file_system'), container = require('vertx/container'),conf = container.config;
+var vertx = require('vertx'), console = require('vertx/console'), doTloader = require('index'), doT =require('doT'), fs = require('vertx/file_system'), container = require('vertx/container'),conf = container.config;
 
 //Load in the templates on startup to get maximum speed
 var dots = doTloader.process({path:conf.template_folder,destination:conf.destination});

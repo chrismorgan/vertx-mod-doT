@@ -22,7 +22,7 @@ function setup(){
 	console.log("Cleaned");
 }
 
-container.deployVerticle("doT-vertx.js",{template_folder:'template_folder',address:'template.apply',can_compile:false,destination:'./compiled/'},function(err, depID) {
+container.deployVerticle("doT-vertx.js",{template_folder:'template_folder',address:'template.apply',can_compile:false,destination:'compiled/'},function(err, depID) {
 
 	vassert.assertNull(err);	
 	vertxTests.startTests(script);
