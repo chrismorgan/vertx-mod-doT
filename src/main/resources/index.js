@@ -51,7 +51,6 @@ function InstallDots(o) {
 }
 
 InstallDots.prototype.compileToFile = function(path, template, def) {
-//	/console.log(path);
 	
 	def = def || {};
 	var modulename = path.substring(path.lastIndexOf("/")+1, path.lastIndexOf("."))

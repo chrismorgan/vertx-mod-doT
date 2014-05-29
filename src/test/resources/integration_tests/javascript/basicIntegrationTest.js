@@ -8,32 +8,30 @@ var fs = require('vertx/file_system');
 
 function testComplexTemplate() {
 
-	//Test one application
 	setup();
-  vertx.eventBus.send("template.apply", {action:'apply',payload:{name:"Jake",age:31},template:'test1'}, function(reply) {
-	vassert.assertEquals("OK", reply.status);
-    vassert.assertEquals("<div>Hi Jake!</div><div>31</div>", reply.message);   
-    vassert.testComplete();
-  });
+	vertx.eventBus.send("template.apply", {action:'apply',payload:{name:"Jake",age:31},template:'test1'}, function(reply) {
+		vassert.assertEquals("OK", reply.status);
+	    vassert.assertEquals("<div>Hi Jake!</div><div>31</div>", reply.message);   
+	    vassert.testComplete();
+	});
 }
 
 function testSimpleTemplate(){
-  //Test another
 	setup();
-  vertx.eventBus.send("template.apply", {action:'apply',payload:{foo:'for my test'},template:'test'}, function(reply) {
-	  vassert.assertEquals("OK", reply.status);
-	  vassert.assertEquals("<h1>Here is a sample template for my test</h1>", reply.message);	  
-	  vassert.testComplete();
-  }); 
+	vertx.eventBus.send("template.apply", {action:'apply',payload:{foo:'for my test'},template:'test'}, function(reply) {
+		vassert.assertEquals("OK", reply.status);
+		vassert.assertEquals("<h1>Here is a sample template for my test</h1>", reply.message);	  
+		vassert.testComplete();
+	}); 
 }
 
 function testMissingTemplate(){
-	  //Test another
 	setup();
-	  vertx.eventBus.send("template.apply", {action:'apply',payload:{foo:'for my test'},template:'missing'}, function(reply) {
-		  vassert.assertEquals("ERROR", reply.status);		  	  
-		  vassert.testComplete();
-	  });
+	vertx.eventBus.send("template.apply", {action:'apply',payload:{foo:'for my test'},template:'missing'}, function(reply) {
+		vassert.assertEquals("ERROR", reply.status);
+		console.log(reply.message);
+		vassert.testComplete();
+	});
 }
 
 function testOneDef() {
@@ -42,7 +40,7 @@ function testOneDef() {
 		vassert.assertEquals("OK", reply.status);
 	    vassert.assertEquals("<div>Jake</div>", reply.message);	  
 	    vassert.testComplete();
-  });  
+	});  
 }
 
 function testBadAction() {
@@ -50,7 +48,7 @@ function testBadAction() {
 	vertx.eventBus.send("template.apply", {action:'gerbil',payload:{foo:"Jake"},template:'test2'}, function(reply) {
 		vassert.assertEquals("ERROR", reply.status);	    	 
 	    vassert.testComplete();
-  });  
+	});  
 }
 
 function testMultiDefJst() {
@@ -59,38 +57,50 @@ function testMultiDefJst() {
 		vassert.assertEquals("OK", reply.status);
 	    vassert.assertEquals("<div class=\"sausage\"><div>bongo</div><div>hello</div><div class=\"hidden\"></div><div>world</div><div class=\"visible\"></div></div>", reply.message);	  
 	    vassert.testComplete();
-  });  
+	});  
 }
 
 function testSimpleCompile(){
 	setup();
-  //Test another
-  vertx.eventBus.send("template.apply", {action:'compile',payload:'<h1>Here is a sample template {{=it.foo}}</h1>',template:'compile1'}, function(reply1) {
+	vertx.eventBus.send("template.apply", {action:'compile',payload:'<h1>Here is a sample template {{=it.foo}}</h1>',template:'compile1'}, function(reply1) {
 	  
-	  vassert.assertEquals("OK", reply1.status);
-	  vassert.assertEquals("Compiled compile1", reply1.message);
+		vassert.assertEquals("OK", reply1.status);
+		vassert.assertEquals("Compiled compile1", reply1.message);
 	  
-	  vertx.eventBus.send("template.apply", {action:'apply',payload:{foo:'for my test'},template:'compile1'}, function(reply2) {
-		  vassert.assertEquals("OK", reply2.status);
+		vertx.eventBus.send("template.apply", {action:'apply',payload:{foo:'for my test'},template:'compile1'}, function(reply2) {
+			vassert.assertEquals("OK", reply2.status);
 		 
-		  vassert.assertEquals("<h1>Here is a sample template for my test</h1>", reply2.message);
-		  vassert.testComplete();
-	  });
-	  
-  }); 
+			vassert.assertEquals("<h1>Here is a sample template for my test</h1>", reply2.message);
+			vassert.testComplete();
+		});
+	}); 
+}
+
+function testDelete() {
+	setup();
+	vertx.eventBus.send("template.apply", {action:'delete',template:'test2'}, function(reply) {
+		vassert.assertEquals("OK", reply.status);
+		
+		vertx.eventBus.send("template.apply", {action:'apply',payload:{foo:"Jake"},template:'test2'}, function(reply) {
+			vassert.assertEquals("ERROR", reply.status);	    	 
+		    vassert.testComplete();
+		}); 
+    });  
 }
 
 var script = this;
 
 function setup(){
-	console.log("Cleaning compilation folder");
-	fs.deleteSync("./compiled/",true);
+	console.log("Cleaning compilation folder ./compiledbasic/");
+	fs.deleteSync("./compiledbasic/",true);
 	console.log("Cleaned");
 }
-//Deploy 3 to ensure everything is compiled and accessible for each verticle
-container.deployVerticle("doT-vertx.js",{template_folder:'template_folder',address:'template.apply',destination:'./compiled/'},function(err, depID) {
+
+container.deployVerticle("doT-vertx.js",{template_folder:'template_folder',address:'template.apply',can_compile:true,destination:'./compiledbasic/'},function(err, depID) {
+	console.log("Deployed Verticle");
+	
 	// Deployment is asynchronous and this this handler will be called when it's complete (or failed)
-	  vassert.assertNull(err);
-	  // If deployed correctly then start the tests!
-	  vertxTests.startTests(script);
+    vassert.assertNull(err);
+	// If deployed correctly then start the tests!
+	vertxTests.startTests(script);
 });

@@ -15,6 +15,8 @@ vertx.eventBus.registerHandler(conf.address, function(message, replier) {
 	case("compile"):
 		compileTemplate(message.template,message.payload,replier);
 		break;
+	case("delete"):
+		deleteTemplate(message.template,replier);
 	default:
 		replyErr("Invalid Action Supplied",replier);
 		break;
@@ -24,9 +26,10 @@ vertx.eventBus.registerHandler(conf.address, function(message, replier) {
 
 applyTemplate = function(templateName,templatePayload,replier){
 	console.log("Applying template");
+	
 	var templateFn = dots[templateName];
 	
-	if(templateFn){		
+	if(typeof templateFn === 'function'){		
 		replyOK(templateFn(templatePayload),replier);		    
 	}else{
 		var err ="Template not found for "+templateName; 
@@ -36,15 +39,32 @@ applyTemplate = function(templateName,templatePayload,replier){
 }
 
 compileTemplate = function(templateName,templateMarkup,replier){
-	console.log("Compiling template "+templateName);
-	var fn = doT.template(templateMarkup);
-	
-	dots[templateName] = fn;
-	replyOK("Compiled "+templateName,replier);
+	if(conf.can_compile){
+		console.log("Compiling template "+templateName);
+		
+		var fn = doT.template(templateMarkup);
+		
+		dots[templateName] = fn;
+		replyOK("Compiled "+templateName,replier);
+	}else{
+		replyErr("Compile not allowed",replier);
+	}	
 }
 
-checkAction = function(message){
-	if(!message.action){
+deleteTemplate = function(templateName,replier){
+	console.log("Deleting template "+templateName);
+	
+	var templateFn = dots[templateName];
+	if(typeof templateFn === 'function'){
+		delete dots[templateName];
+		replyOK("Deleted "+templateName,replier);
+	}else{
+		replyErr("Template does not exist",replier);
+	}
+}
+
+checkAction = function(message){	
+	if(typeof message.action !== 'string'){
 		replyErr("No Action Specified",replier);
 	}else{
 		return message.action;

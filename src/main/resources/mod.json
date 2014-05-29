@@ -5,13 +5,13 @@
 
   // If your module is going to be registered in the Vert.x module registry you will also need the following
   // mandatory fields
-  "description":"Vertx templating module for doT.js",
+  "description":"Vertx HTML templating module for doT.js",
   "licenses": ["The MIT License"],
   "author": "WatchWithMe",
   "preserve-cwd":true,
   // Optional fields
   "developers": ["Chris Morgan"],
-  "keywords": ["JavaScript", "templating", "doT"],
+  "keywords": ["JavaScript", "HTML", "templating", "doT"],
   "homepage": "http://github.com/chrismorgan/doT-vertx",
 
   "auto-redeploy": true
