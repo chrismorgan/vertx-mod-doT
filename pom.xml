@@ -6,7 +6,7 @@
   <groupId>uk.me.watchwith</groupId>
   <artifactId>vertx-mod-doT</artifactId>
   <packaging>jar</packaging>
-  <version>0.1-SNAPSHOT</version>
+  <version>1.0</version>
   <name>Project - doT-vertx</name>
   <url>http://maven.apache.org</url>
 
