@@ -69,11 +69,11 @@ For example:
 
 Contents of "template1.dot":
 
-<h1>Here is a sample template {{=it.foo}}</h1>
+	<h1>Here is a sample template {{=it.foo}}</h1>
 
 End result:
 
-<h1>Here is a sample template for my test</h1>
+	<h1>Here is a sample template for my test</h1>
 
 ### compile
 
