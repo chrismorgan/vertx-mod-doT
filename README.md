@@ -83,7 +83,7 @@ Takes a new template contents and compiles it into memory, ready to be used with
 
 Removes a named template from memory, removing it from use
 
-## Features of [doT](https://github/olado/doT/)
+## Features of [doT](https://github.com/olado/doT/)
 
 A few features:
 
