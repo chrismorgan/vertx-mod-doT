@@ -84,7 +84,10 @@ var script = this;
 
 function setup(){
 	console.log("Cleaning compilation folder compiledbasic/");
-	fs.deleteSync("compiledbasic/",true);
+	var result = fs.existsSync("compiledbasic/");
+	if(result){
+		fs.deleteSync("compiledbasic/",true);
+	}
 	console.log("Cleaned");
 }
 

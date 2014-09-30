@@ -31,8 +31,12 @@
 */
 
 var fs = require('vertx/file_system'),
+	vertx = require('vertx'),
 	console = require('vertx/console'),
-	doT = module.exports = require("doT");
+	
+	doT = module.exports = require("doT"),
+	sep  = java.lang.System.getProperty("file.separator");
+	
 
 doT.process = function(options) {
 	//path, destination, global, rendermodule, templateSettings
@@ -40,20 +44,20 @@ doT.process = function(options) {
 };
 
 function InstallDots(o) {
-	this.__path 		= o.path || "./";
-	if (this.__path[this.__path.length-1] !== '/') this.__path += '/';
+	this.__path 		= o.path || ("."+sep);
+	if (this.__path[this.__path.length-1] !== sep) this.__path += sep;
 	this.__destination	= o.destination || this.__path;
-	if (this.__destination[this.__destination.length-1] !== '/') this.__destination += '/';
+	if (this.__destination[this.__destination.length-1] !== sep) this.__destination += sep;
 	this.__global		= o.global || "window.render";
 	this.__rendermodule	= o.rendermodule || {};
 	this.__settings 	= o.templateSettings ? copy(o.templateSettings, copy(doT.templateSettings)) : undefined;
 	this.__includes		= {};
 }
 
-InstallDots.prototype.compileToFile = function(path, template, def) {
+InstallDots.prototype.compileToSharedData = function(path, template, def) {
 	
 	def = def || {};
-	var modulename = path.substring(path.lastIndexOf("/")+1, path.lastIndexOf("."))
+	var modulename = path.substring(path.lastIndexOf(sep)+1, path.lastIndexOf("."))
 		, defs = copy(this.__includes, copy(def))
 		, settings = this.__settings || doT.templateSettings
 		, compileoptions = copy(settings)
@@ -81,24 +85,16 @@ InstallDots.prototype.compileToFile = function(path, template, def) {
 	}
 	compiled += defaultcompiled.toString().replace('anonymous', modulename);
 	
-	var result = fs.existsSync(path);
-	if(result){
-		console.log(path + ' already exists, ignoring');
-	}else{
-		if(!fs.existsSync(this.__destination)){
-			fs.mkDirSync(this.__destination);
-		}	
-		console.log('Creating file '+path);
-		var data = "(function(){" + compiled
-		+ "var itself=" + modulename + ";"
-		+ addexports(exports)
-		+ "if(typeof module!=='undefined' && module.exports) module.exports=itself;else if(typeof define==='function')define(function(){return itself;});else {"
-		+ this.__global + "=" + this.__global + "||{};" + this.__global + "['" + modulename + "']=itself;}}());";
-		
-		fs.writeFileSync(path,data);				
-	}
-
-};
+	var data = "(function(){" + compiled
+	+ "var itself=" + modulename + ";"
+	+ addexports(exports)
+	+ "if(typeof module!=='undefined' && module.exports) module.exports=itself;else if(typeof define==='function')define(function(){return itself;});else {"
+	+ this.__global + "=" + this.__global + "||{};" + this.__global + "['" + modulename + "']=itself;}}());";
+	
+	var map = vertx.getMap('compiled.functions');
+	console.log("Compiled "+modulename+" using "+data);
+	map.put(modulename,data);
+}
 
 function addexports(exports) {
 	for (var ret ='', i=0; i< exports.length; i++) {
@@ -124,7 +120,6 @@ function readdata(path) {
 InstallDots.prototype.compilePath = function(path) {
 	var data = readdata(path);
 	if (data) {
-		//console.log(JSON.stringify(this.__includes));
 		return doT.template(data,
 					this.__settings || doT.templateSettings,
 					copy(this.__includes));
@@ -134,31 +129,48 @@ InstallDots.prototype.compilePath = function(path) {
 };
 
 InstallDots.prototype.compileAll = function() {
+	console.log("Extracting all doT templates in sharedData");
+	//Pull in definitions from sharedData
+	var compiledTemplates = vertx.getMap('compiled.functions'),			
+	k, l, name, namePath;
+	console.log(compiledTemplates.keySet().size());
+	compiledTemplates.keySet().toArray().forEach(function(name){
+		console.log(name);
+		if (/\.def(\.dot|\.jst)?$/.test(name)) {
+			console.log("Loaded shared def " + name);
+			this.__includes[name] = compiledTemplates.get(name);
+		}
+	});
+	
 	console.log("Compiling all doT templates in "+this.__path);	
 	var defFolder = this.__path,
 		sources = fs.readDirSync(defFolder,'.*\.dot|.*\.jst|.*\.def$'),			
 		k, l, name, namePath;
+	//Pull in definitions from file
 	for( k = 0, l = sources.length; k < l; k++) {
 		name = sources[k];		
-		namePath = name.substring(name.lastIndexOf(java.lang.System.getProperty("file.separator"))+1);	
+		namePath = name.substring(name.lastIndexOf(sep)+1);	
 		if (/\.def(\.dot|\.jst)?$/.test(namePath)) {
 			console.log("Loaded def " + defFolder + namePath);
-			this.__includes[namePath.substring(0, namePath.indexOf('.'))] = readdata(defFolder + namePath);
+			var incName = namePath.substring(0, namePath.indexOf('.'))
+			if(this.__includes[incName]===undefined){
+				console.log("Added "+incName+" from file");
+				this.__includes[incName] = readdata(defFolder + namePath);
+			}
 		}
 	}
 
 	for( k = 0, l = sources.length; k < l; k++) {
 		name = sources[k];
-		namePath = name.substring(name.lastIndexOf(java.lang.System.getProperty("file.separator"))+1);	
+		namePath = name.substring(name.lastIndexOf(sep)+1);	
 		if (/\.dot(\.def|\.jst)?$/.test(name)) {
 			console.log("Compiling " + namePath + " to function");
 			this.__rendermodule[namePath.substring(0, namePath.indexOf('.'))] = this.compilePath(defFolder + namePath);
-//			/console.log(namePath+this.__rendermodule[namePath.substring(0, namePath.indexOf('.'))].toString());
 		}
 		if (/\.jst(\.dot|\.def)?$/.test(name)) {
-			console.log("Compiling " + namePath + " to file");
-			this.compileToFile(this.__destination+namePath.substring(0,namePath.indexOf('.')) + '.js',
-					readdata(defFolder + namePath));
+			console.log("Compiling " + namePath + " to sharedData");
+			this.compileToSharedData(namePath.substring(0,namePath.indexOf('.')) + '.js',
+							readdata(defFolder + namePath));
 		}		
 	}
 	

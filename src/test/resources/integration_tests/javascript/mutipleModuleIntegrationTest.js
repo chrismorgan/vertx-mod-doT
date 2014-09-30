@@ -8,26 +8,63 @@ var fs = require('vertx/file_system');
 
 
 function testModSimpleCompile(){
-	//setup();
-	vertx.eventBus.publish("template.apply", {action:'compile',payload:'<h1>Here is a sample template {{=it.foo}}</h1>',template:'compile1'});
-  
-	//Wait for all verticles/modules to compile, reply from within will not be caught as we are using publish
-	timer.setTimer(5000,function(){
-	  
+	//Use send to compile one verticle but force others to compile on fly.	
+	vertx.eventBus.send("template.apply", {action:'compile',payload:'<h1>Here is a sample template {{=it.foo}}</h1>',template:'compile1'});
+  	  
+	vertx.eventBus.send("template.apply", {action:'apply',payload:{foo:'for my test'},template:'compile1'}, function(reply2) {
+		vassert.assertEquals("OK", reply2.status);
+		 
+		vassert.assertEquals("<h1>Here is a sample template for my test</h1>", reply2.message);
+	
 		vertx.eventBus.send("template.apply", {action:'apply',payload:{foo:'for my test'},template:'compile1'}, function(reply2) {
 			vassert.assertEquals("OK", reply2.status);
 			 
 			vassert.assertEquals("<h1>Here is a sample template for my test</h1>", reply2.message);
-			vassert.testComplete();
-		}); 
-	});
+			
+			vertx.eventBus.send("template.apply", {action:'apply',payload:{foo:'for my test'},template:'compile1'}, function(reply2) {
+				vassert.assertEquals("OK", reply2.status);
+				 
+				vassert.assertEquals("<h1>Here is a sample template for my test</h1>", reply2.message);
+				vassert.testComplete();
+			});		
+		});
+	}); 
+	
+}
+
+function testModComplexCompile(){
+	//Use publish to compile all verticles at once
+	vertx.eventBus.publish("template.apply", {action:'compile',payload:'<h1>Here is a sample template {{=it.foo}}</h1>',template:'compile1'});
+  	  
+	vertx.eventBus.send("template.apply", {action:'apply',payload:{foo:'for my test'},template:'compile1'}, function(reply2) {
+		vassert.assertEquals("OK", reply2.status);
+		 
+		vassert.assertEquals("<h1>Here is a sample template for my test</h1>", reply2.message);
+	
+		vertx.eventBus.send("template.apply", {action:'apply',payload:{foo:'for my test'},template:'compile1'}, function(reply2) {
+			vassert.assertEquals("OK", reply2.status);
+			 
+			vassert.assertEquals("<h1>Here is a sample template for my test</h1>", reply2.message);
+			
+			vertx.eventBus.send("template.apply", {action:'apply',payload:{foo:'for my test'},template:'compile1'}, function(reply2) {
+				vassert.assertEquals("OK", reply2.status);
+				 
+				vassert.assertEquals("<h1>Here is a sample template for my test</h1>", reply2.message);
+				vassert.testComplete();
+			});		
+		});
+	}); 
+	
 }
 
 var script = this;
 
 function setup(){
 	console.log("Cleaning compilation folder compiledmultimodule/");
-	fs.deleteSync("compiledmultimodule/",true);
+	var result = fs.existsSync("compiledmultimodule/");
+	if(result){
+		fs.deleteSync("compiledmultimodule/",true);
+	}
 	console.log("Cleaned");
 }
 

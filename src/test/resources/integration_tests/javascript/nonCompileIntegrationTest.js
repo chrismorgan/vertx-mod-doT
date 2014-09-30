@@ -18,7 +18,10 @@ var script = this;
 
 function setup(){
 	console.log("Cleaning compilation folder");
-	fs.deleteSync("./compiled/",true);
+	var result = fs.existsSync("./compiled/");
+	if(result){
+		fs.deleteSync("./compiled/",true);
+	}
 	console.log("Cleaned");
 }
 

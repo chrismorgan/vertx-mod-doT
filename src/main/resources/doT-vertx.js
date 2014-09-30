@@ -25,16 +25,30 @@ vertx.eventBus.registerHandler(conf.address, function(message, replier) {
 });
 
 applyTemplate = function(templateName,templatePayload,replier){
-	console.log("Applying template");
+	console.log("Applying template "+templateName);
 	
-	var templateFn = dots[templateName];
-	
+	var templateFn = dots[templateName];	
+		
 	if(typeof templateFn === 'function'){		
 		replyOK(templateFn(templatePayload),replier);		    
-	}else{
+	}else{		
+		var map = vertx.getMap('compiled.functions');		
+		var templateRaw = map.get(templateName);
+		if(templateRaw !== null){	
+			try {
+				templateFn = new Function(doT.templateSettings.varname, templateRaw);
+				dots[templateName] = templateFn;						
+				replyOK(templateFn(templatePayload),replier);	 
+
+			} catch (e) {
+				if (typeof console !== 'undefined') console.log("Could not create a template function: " + templateRaw);
+				throw e;
+			}
+		
+		}
+		
 		var err ="Template not found for "+templateName; 
-		replyErr(err,replier);	
-	    console.log(err);
+		replyErr(err,replier);		    
 	}
 }
 
@@ -43,6 +57,10 @@ compileTemplate = function(templateName,templateMarkup,replier){
 		console.log("Compiling template "+templateName);
 		
 		var fn = doT.template(templateMarkup);
+		
+		var map = vertx.getMap('compiled.functions');
+		var fnString = fn.toString();				
+		map.put(templateName,fnString.slice(fnString.indexOf('{'),fnString.lastIndexOf('}')+1));
 		
 		dots[templateName] = fn;
 		replyOK("Compiled "+templateName,replier);

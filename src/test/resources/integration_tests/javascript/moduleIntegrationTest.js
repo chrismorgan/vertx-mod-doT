@@ -63,7 +63,10 @@ var script = this;
 
 function setup(){
 	console.log("Cleaning compilation folder compiledmodule/");
-	fs.deleteSync("compiledmodule/",true);
+	var result = fs.existsSync("compiledmodule/");
+	if(result){
+		fs.deleteSync("compiledmodule/",true);
+	}
 	console.log("Cleaned");
 }
 
