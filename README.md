@@ -77,7 +77,7 @@ End result:
 
 ### compile
 
-Takes a new template contents and compiles it into memory, ready to be used with `apply`. When multiple modules are applied this should be used with a `publish` rather than a `send` so that all verticles compile it.
+Takes a new template contents and compiles it into memory, ready to be used with `apply`. When multiple modules are applied this should be used with a `publish` rather than a `send` so that all verticles compile it. Though the module will try to compile the template on-the-fly and add it both to its cache and the vertx sharedData to assist subsequent calls.
 
 ### delete
 

@@ -31,22 +31,22 @@ applyTemplate = function(templateName,templatePayload,replier){
 		
 	if(typeof templateFn === 'function'){		
 		replyOK(templateFn(templatePayload),replier);		    
-	}else{		
-		var map = vertx.getMap('compiled.functions');		
-		var templateRaw = map.get(templateName);
-		if(templateRaw !== null){	
-			try {
-				templateFn = new Function(doT.templateSettings.varname, templateRaw);
-				dots[templateName] = templateFn;						
-				replyOK(templateFn(templatePayload),replier);	 
-
-			} catch (e) {
-				if (typeof console !== 'undefined') console.log("Could not create a template function: " + templateRaw);
-				throw e;
+	}else{	
+		if(conf.can_compile){
+			var map = vertx.getMap('compiled.functions');		
+			var templateRaw = map.get(templateName);
+			if(templateRaw !== null){	
+				try {
+					templateFn = new Function(doT.templateSettings.varname, templateRaw);
+					dots[templateName] = templateFn;						
+					replyOK(templateFn(templatePayload),replier);	 
+	
+				} catch (e) {
+					if (typeof console !== 'undefined') console.log("Could not create a template function: " + templateRaw);
+					throw e;
+				}			
 			}
-		
 		}
-		
 		var err ="Template not found for "+templateName; 
 		replyErr(err,replier);		    
 	}
